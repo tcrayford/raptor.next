@@ -17,8 +17,8 @@ module Raptor
   end
 
   class NullLayout
-    def self.render(inner, presenter)
-      inner.render(presenter)
+    def self.render(inner, context)
+      inner.render(context)
     end
   end
 
@@ -37,17 +37,17 @@ module Raptor
         other.tilt == tilt
     end
 
-    def render(inner, presenter)
-      context = ViewContext.new(presenter)
+    def render(inner, context)
       rendered = inner.render(context)
       @tilt.render(context) { rendered }
     end
   end
 
   class ViewContext < BasicObject
-    def initialize(presenter)
+    def initialize(presenter, injector)
       @presenter = presenter
       @areas = {}
+      @injector = injector
     end
 
     def content_for(name, &block)
@@ -57,6 +57,11 @@ module Raptor
       else
         @areas[name].join
       end
+    end
+
+    def inject(name)
+      ::Raptor.log("Injecting #{name.inspect} into view")
+      @injector.inject_name(name)
     end
 
     def method_missing(name, *args, &block)

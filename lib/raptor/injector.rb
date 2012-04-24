@@ -29,9 +29,12 @@ module Raptor
       end.reject do |type, name|
         type == :opt && sources[name].nil?
       end.map do |type, name|
-        source_proc = sources[name] or raise UnknownInjectable.new(name)
-        source_proc.call
+        inject_name(name)
       end
+    end
+    def inject_name(name)
+      source_proc = sources[name] or raise UnknownInjectable.new(name)
+      source_proc.call
     end
 
     def parameters(method)

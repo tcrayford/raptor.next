@@ -65,7 +65,8 @@ module Raptor
 
     def respond(route, subject, injector)
       presenter = create_presenter(subject, injector)
-      Rack::Response.new(render(presenter))
+      context = Raptor::ViewContext.new(presenter, injector)
+      Rack::Response.new(render(context))
     end
 
     def render(presenter)

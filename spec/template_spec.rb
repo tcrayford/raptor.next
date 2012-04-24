@@ -1,6 +1,6 @@
 require "rack"
 require_relative "spec_helper"
-require_relative "../lib/raptor/templates"
+require_relative "../lib/raptor"
 
 describe Raptor::Template do
   let(:presenter) { stub("presenter") }
@@ -26,6 +26,7 @@ end
 
 describe Raptor::Layout do
   let(:presenter) { stub }
+  let(:injector) { Raptor::Injector.new([]) }
 
   it "renders a yielded template" do
     inner = stub(:render => 'inner')
@@ -37,27 +38,35 @@ describe Raptor::Layout do
   it "integrates content_for" do
     inner = Raptor::Template.from_path("../spec/fixtures/provides_content_for.html.erb")
     layout = Raptor::Layout.from_path('spec/fixtures/layout_with_content_for.html.erb')
-    rendered = layout.render(inner, presenter)
+    rendered = layout.render(inner, Raptor::ViewContext.new(presenter, injector))
     rendered.strip.should include("<script></script")
   end
 end
 
 describe Raptor::ViewContext do
+  let(:injector) { Raptor::Injector.new([]) }
   it "delegates to the presenter" do
-    Raptor::ViewContext.new(stub(:cheese => 'walrus')).cheese.should == 'walrus'
+    Raptor::ViewContext.new(stub(:cheese => 'walrus'), injector).cheese.should == 'walrus'
   end
 
   it "stores content_for" do
-    context = Raptor::ViewContext.new(stub)
+    context = Raptor::ViewContext.new(stub, injector)
     context.content_for(:head) { 'what' }
     context.content_for(:head).should == 'what'
   end
 
   it "appends multiple content_for blocks" do
-    context = Raptor::ViewContext.new(stub)
+    context = Raptor::ViewContext.new(stub, injector)
     context.content_for(:head) { 'what' }
     context.content_for(:head) { 'what' }
     context.content_for(:head).should == 'whatwhat'
+  end
+
+  it "injects from the injector" do
+    current_user = stub
+    injector = Raptor::Injector.new([Raptor::Injectables::Fixed.new(:current_user, current_user)])
+    context = Raptor::ViewContext.new(stub, injector)
+    context.inject(:current_user).should == current_user
   end
 end
 

@@ -97,6 +97,12 @@ describe Raptor::Injector do
       injector.call(method(:takes_watermelon)).should == "fruity"
     end
   end
+
+  it "can be asked for an injection by name" do
+    shins = stub
+    injector = Raptor::Injector.new([Raptor::Injectables::Fixed.new(:shins, shins)])
+    injector.inject_name(:shins).should == shins
+  end
 end
 
 class ObjectWithInitializerTakingId
